@@ -1,0 +1,138 @@
+#include <Arduino_FreeRTOS.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+#include <Wire.h>
+
+int Empty;                          //available space integer
+int allSpace = 4;
+int countYes = 0;
+String Available = "";
+ 
+#define LED1 8
+  int LED2=9;
+  int LED3=10;
+  int LED4=11;
+void setup() {
+xTaskCreate(detectpresenceTask, "detect is the parking lot is free or not", 128, NULL, 1, NULL);
+xTaskCreate(barrierTask, " barrier and display Task",128, NULL, 1, NULL);
+   Empty=allSpace;
+
+  
+  
+}
+
+void loop() {}
+void barrierTask(void *pvParameters){
+  
+  int  IRsensorEntry = 2;                      // entry sensor 
+  int  IRsensorExit = 3;                   //exi sensor
+  
+  int servoPin1 = 4; 
+  int servoPin2 = 5; 
+  Servo Servo1;
+  Servo Servo2;
+  pinMode(IRsensorExit, INPUT);   
+  pinMode(IRsensorEntry, INPUT);
+  Servo1.attach(servoPin1);
+  Servo2.attach(servoPin2);
+  LiquidCrystal_I2C lcd(0x27, 16, 2);
+  lcd.init();
+  lcd.backlight();
+  
+   while(1){
+    
+     
+     int carEntry = digitalRead(IRsensorEntry);      // read ir input
+     if (carEntry == HIGH) {                     // if high then count and send data
+        countYes--;  
+       Servo1.write(90);
+       delay(1000);
+      
+     } 
+     if (carEntry == LOW) {                     // if high then count and send data
+         
+       Servo1.write(180);
+       delay(1000);
+      
+       
+    }
+       
+     
+
+     int carExit = digitalRead(IRsensorExit);      // read ir input
+     if (carExit == HIGH) {                     // if high then count and send data
+        countYes++;
+     
+     
+       
+       Servo2.write(90); 
+       delay(1000);
+   
+  
+       }
+     if (carExit == LOW) {                     // if high then count and send data
+         
+       Servo2.write(180);
+       delay(1000);
+     
+     }
+    
+         
+     Empty = allSpace - countYes; 
+        Available = String("Available= ") + String(Empty) + String("/") + String(allSpace);
+       lcd.setCursor(0, 0);
+       lcd.print(Available);  
+       
+  
+       
+     } 
+
+   }
+
+
+
+void detectpresenceTask(void *pvParameters){
+  int IRSensor1=6; 
+  int IRSensor2=7;
+  int led1=8;
+  int led2=9;
+  int led3=10;
+  int led4=11;
+  pinMode(IRSensor1,INPUT);
+  pinMode(IRSensor2,INPUT);
+  pinMode(led1,OUTPUT);
+  pinMode(led2,OUTPUT);
+  pinMode(led3,OUTPUT);
+  pinMode(led4,OUTPUT);
+
+  while(1){
+    
+ int status1=digitalRead(IRSensor1);
+ if(status1==1)
+  { digitalWrite(led1,HIGH);
+    digitalWrite(led2,LOW);
+  }
+ else 
+ { digitalWrite(led1,LOW);
+   digitalWrite(led2,HIGH);
+ }
+
+  int status2=digitalRead(IRSensor2);
+ if(status2==1)
+  { digitalWrite(led3,HIGH);
+    digitalWrite(led4,LOW);
+  }
+ else 
+ { digitalWrite(led3,LOW);
+   digitalWrite(led4,HIGH);
+ }
+ 
+  }
+  }
+
+
+
+
+
+   
+ 
